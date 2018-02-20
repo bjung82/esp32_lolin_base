@@ -1,0 +1,6 @@
+{
+    "sketch": "sensor_base.ino",
+    "board": "espressif:esp32:lolin32",
+    "configuration": "FlashFreq=80,UploadSpeed=115200",
+    "port": "COM4"
+}
