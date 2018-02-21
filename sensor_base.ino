@@ -84,7 +84,9 @@ void setupWifi()
 void setupSensors()
 {
     dht.begin();
-    lightMeter.begin();
+    if (!lightMeter.begin()) {
+        displayStatusLine("GY-30 Init ERR");
+    }
 }
 
 void setup()
