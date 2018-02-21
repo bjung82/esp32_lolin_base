@@ -7,6 +7,7 @@
 #include "SSD1306.h"
 #include <wire.h>
 #include "DHT.h"
+#include <BH1750.h>
 
 /* OLED */
 
@@ -18,6 +19,8 @@ SSD1306 display(0x3c, 5, 4);
 
 DHT dht(DHT_PIN, DHT_TYPE);
 
+// Light meter
+BH1750 lightMeter;
 
 void displayStatusLine(String message)
 {
@@ -81,6 +84,7 @@ void setupWifi()
 void setupSensors()
 {
     dht.begin();
+    lightMeter.begin();
 }
 
 void setup()
@@ -106,6 +110,11 @@ void loop()
         Serial.print(h);
         Serial.println("%");
     }
+
+    uint16_t lux = lightMeter.readLightLevel();
+    Serial.print("Light: ");
+    Serial.print(lux);
+    Serial.println(" lx ");
 
     delay(5000);
     
