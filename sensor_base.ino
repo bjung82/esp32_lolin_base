@@ -6,10 +6,18 @@
 
 #include "SSD1306.h"
 #include <wire.h>
+#include "DHT.h"
 
 /* OLED */
 
 SSD1306 display(0x3c, 5, 4);
+
+// Temperature and humidity
+#define DHT_TYPE DHT22
+#define DHT_PIN 15
+
+DHT dht(DHT_PIN, DHT_TYPE);
+
 
 void displayStatusLine(String message)
 {
@@ -70,14 +78,35 @@ void setupWifi()
     displayStatusLine("WIFI connected");
 }
 
+void setupSensors()
+{
+    dht.begin();
+}
+
 void setup()
 {
     Serial.begin(115200);
     display.init();
 
     setupWifi();
+    setupSensors();
 }
 
 void loop()
 {
+    float t_c = dht.readTemperature();
+    float h = dht.readHumidity();
+
+
+    if (isnan(h) || isnan(t_c)){
+        Serial.println("Failed to read from DHT sensor!");
+    } else {
+        Serial.print(t_c);
+        Serial.print("°C ");
+        Serial.print(h);
+        Serial.println("%");
+    }
+
+    delay(5000);
+    
 }
