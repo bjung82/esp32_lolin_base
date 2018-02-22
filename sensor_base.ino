@@ -9,7 +9,7 @@
 #include "DHT.h"
 #include <BH1750.h>
 
-/* OLED */
+// OLED 
 
 SSD1306 display(0x3c, 5, 4);
 
@@ -103,7 +103,7 @@ void setup()
 }
 
 
-void readSensors()
+void readValues()
 {
     h = dht.readHumidity();
     t_c = dht.readTemperature();
@@ -125,7 +125,7 @@ void readSensors()
     Serial.println(" lx ");
 }
 
-void updateOledValues()
+void displayValues()
 {
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
@@ -156,8 +156,8 @@ void updateOledValues()
 
 void loop()
 {
-    readSensors();
-    updateOledValues();
+    readValues();
+    displayValues();
 
     delay(5000);
 }
