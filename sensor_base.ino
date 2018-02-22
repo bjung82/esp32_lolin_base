@@ -16,11 +16,14 @@ SSD1306 display(0x3c, 5, 4);
 // Temperature and humidity
 #define DHT_TYPE DHT22
 #define DHT_PIN 15
+float t_c;
+float h;
 
 DHT dht(DHT_PIN, DHT_TYPE);
 
 // Light meter
 BH1750 lightMeter;
+uint16_t lux;
 
 void displayStatusLine(String message)
 {
@@ -84,7 +87,8 @@ void setupWifi()
 void setupSensors()
 {
     dht.begin();
-    if (!lightMeter.begin()) {
+    if (!lightMeter.begin())
+    {
         displayStatusLine("GY-30 Init ERR");
     }
 }
@@ -98,26 +102,62 @@ void setup()
     setupSensors();
 }
 
-void loop()
+
+void readSensors()
 {
-    float t_c = dht.readTemperature();
-    float h = dht.readHumidity();
-
-
-    if (isnan(h) || isnan(t_c)){
+    h = dht.readHumidity();
+    t_c = dht.readTemperature();
+    lux = lightMeter.readLightLevel();
+    if (isnan(h) || isnan(t_c))
+    {
         Serial.println("Failed to read from DHT sensor!");
-    } else {
+    }
+    else
+    {
         Serial.print(t_c);
         Serial.print("°C ");
         Serial.print(h);
         Serial.println("%");
     }
 
-    uint16_t lux = lightMeter.readLightLevel();
     Serial.print("Light: ");
     Serial.print(lux);
     Serial.println(" lx ");
+}
+
+void updateOledValues()
+{
+    display.clear();
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
+    display.drawString(0, 0, WiFi.localIP().toString());
+
+    String t_h;
+    if (!isnan(t_c))
+    {
+        t_h = String(t_c) + "°C";
+        //display.drawString(0, 20, String(t_c) + "°C");
+    } else {
+        t_h = "N/A °C";
+        //display.drawString(0, 20,  "N/A °C");
+    }
+    t_h += " ";
+    if (!isnan(h)){
+        t_h += String(h) + "%";
+        //display.drawString(0, 40, String(h) + "%");
+    } else {
+        t_h += "N/A %";
+        //display.drawString(0, 40,  "N/A %");
+    }
+    Serial.println(t_h);
+    display.drawString(0, 20, t_h);
+    display.drawString(0, 40, String(lux) + " Lux");
+    display.display();
+}
+
+void loop()
+{
+    readSensors();
+    updateOledValues();
 
     delay(5000);
-    
 }
