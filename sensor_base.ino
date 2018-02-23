@@ -3,6 +3,7 @@
 #include <DNSServer.h>
 #include <WebServer.h>
 #include "WiFiManager.h"
+#include <PubSubClient.h>
 
 #include "SSD1306.h"
 #include <wire.h>
@@ -29,6 +30,16 @@ DHT dht(DHT_PIN, DHT_TYPE);
 // Light meter
 BH1750 lightMeter;
 uint16_t lux;
+
+// MQTT
+
+const char *mqtt_server = "192.168.1.111";
+const int mqtt_port = 1883;
+const char *mqtt_user = "pi";
+const char *mqtt_password = "password";
+
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
 
 void displayStatusLine(String message)
 {
@@ -89,6 +100,20 @@ void setupWifi()
     displayStatusLine("WIFI connected");
 }
 
+void setupMQTT()
+{
+    Serial.println("Connecting MQTT server " + String(mqtt_server) + ":" + String(mqtt_port) + "...");
+    mqttClient.setServer(mqtt_server, mqtt_port);
+    if (mqttClient.connect("ESP32_THL_Sensor"))
+    {
+        Serial.println("MQTT server connected!");
+    }
+    else
+    {
+        Serial.println("Cannot connect MQTT server: " + mqttClient.state());
+    }
+}
+
 void setupSensors()
 {
     dht.begin();
@@ -130,6 +155,7 @@ void setup()
     display.init();
 
     setupWifi();
+    setupMQTT();
     setupClock();
     setupSensors();
 }
@@ -186,10 +212,35 @@ void displayValues()
     display.display();
 }
 
+void publishValues()
+{
+    if (!mqttClient.connected()){
+        return;
+    }
+
+    mqttClient.publish("esp32/state", "Running");
+    
+    if (!isnan(t_c))
+    {
+        mqttClient.publish("esp32/temperature", String(t_c).c_str());
+    }
+    if (!isnan(h)){
+        mqttClient.publish("esp32/humidity", String(h).c_str());
+    }
+    
+    if (lux > 0 && lux < 10000){
+        mqttClient.publish("esp32/lux", String(lux).c_str());
+    }
+   
+    mqttClient.publish("esp32/wifi-rssi", String(WiFi.RSSI()).c_str());
+    
+    mqttClient.loop();
+}
+
 void loop()
 {
     readValues();
     displayValues();
-
+    publishValues();
     delay(5000);
 }
