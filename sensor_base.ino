@@ -129,24 +129,20 @@ void displayValues()
 {
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
-    display.drawString(0, 0, WiFi.localIP().toString());
+    display.drawString(0, 0, WiFi.localIP().toString() + " (" + WiFi.RSSI() + " dBm)");
 
     String t_h;
     if (!isnan(t_c))
     {
         t_h = String(t_c) + "°C";
-        //display.drawString(0, 20, String(t_c) + "°C");
     } else {
         t_h = "N/A °C";
-        //display.drawString(0, 20,  "N/A °C");
     }
     t_h += " ";
     if (!isnan(h)){
         t_h += String(h) + "%";
-        //display.drawString(0, 40, String(h) + "%");
     } else {
         t_h += "N/A %";
-        //display.drawString(0, 40,  "N/A %");
     }
     Serial.println(t_h);
     display.drawString(0, 20, t_h);
