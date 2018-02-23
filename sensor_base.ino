@@ -9,8 +9,13 @@
 #include "DHT.h"
 #include <BH1750.h>
 
-// OLED 
+#include <NTPtimeESP.h>
 
+// Time
+NTPtime NTPde("de.pool.ntp.org");
+strDateTime dateTime;
+
+// OLED
 SSD1306 display(0x3c, 5, 4);
 
 // Temperature and humidity
@@ -93,15 +98,41 @@ void setupSensors()
     }
 }
 
+void setupClock()
+{
+    Serial.println("Setup clock...");
+    int numRetries = 0;
+retry:
+    if (numRetries < 3)
+    {
+        // first parm TimeZone (UTC+1 = germany), second parm daylightSaving
+        dateTime = NTPde.getNTPtime(1.0, 1);
+        if (dateTime.valid)
+        {
+            NTPde.printDateTime(dateTime);
+        }
+        else
+        {
+            delay(1000);
+            numRetries++;
+            goto retry;
+        }
+    }
+    else
+    {
+        Serial.println("Could not get time.");
+    }
+}
+
 void setup()
 {
     Serial.begin(115200);
     display.init();
 
     setupWifi();
+    setupClock();
     setupSensors();
 }
-
 
 void readValues()
 {
@@ -135,13 +166,18 @@ void displayValues()
     if (!isnan(t_c))
     {
         t_h = String(t_c) + "°C";
-    } else {
+    }
+    else
+    {
         t_h = "N/A °C";
     }
     t_h += " ";
-    if (!isnan(h)){
+    if (!isnan(h))
+    {
         t_h += String(h) + "%";
-    } else {
+    }
+    else
+    {
         t_h += "N/A %";
     }
     Serial.println(t_h);
