@@ -28,8 +28,9 @@ float h;
 DHT dht(DHT_PIN, DHT_TYPE);
 
 // Light meter
+#define BH1750_DEBUG;
 BH1750 lightMeter;
-uint16_t lux;
+uint16_t lux = 0;
 
 // MQTT
 
@@ -117,6 +118,7 @@ void setupMQTT()
 void setupSensors()
 {
     dht.begin();
+    
     if (!lightMeter.begin())
     {
         displayStatusLine("GY-30 Init ERR");
@@ -164,7 +166,7 @@ void readValues()
 {
     h = dht.readHumidity();
     t_c = dht.readTemperature();
-    lux = lightMeter.readLightLevel();
+    
     if (isnan(h) || isnan(t_c))
     {
         Serial.println("Failed to read from DHT sensor!");
@@ -177,6 +179,7 @@ void readValues()
         Serial.println("%");
     }
 
+    lux = lightMeter.readLightLevel();
     Serial.print("Light: ");
     Serial.print(lux);
     Serial.println(" lx ");
@@ -186,7 +189,7 @@ void displayValues()
 {
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
-    display.drawString(0, 0, WiFi.localIP().toString() + " (" + WiFi.RSSI() + " dBm)");
+    display.drawString(0, 0, WiFi.localIP().toString() + " (" + WiFi.RSSI() + " RSSI)");
 
     String t_h;
     if (!isnan(t_c))
@@ -237,8 +240,54 @@ void publishValues()
     mqttClient.loop();
 }
 
+void checkI2CBus()
+{
+    byte error, address;
+    int nDevices;
+    Serial.println();
+    Serial.println("I2C Scanning...");
+    nDevices = 0;
+    for (address = 1; address < 127; address++)
+    {
+        // The i2c scanner uses the return value of Write.endTransmisstion to see if a device did acknowledge to the address.
+        Wire.beginTransmission(address);
+        error = Wire.endTransmission();
+
+        if (error == 0)
+        {
+            Serial.print("I2C device found at address 0x");
+            if (address < 16)
+            {
+                Serial.print("0");
+            }
+            Serial.print(address, HEX);
+            Serial.println(" !");
+            nDevices++;
+        }
+        else if (error == 4)
+        {
+            Serial.print("Unknown error at address 0x");
+            if (address < 16)
+            {
+                Serial.print("0");
+            }
+            Serial.println(address, HEX);
+        }
+    }
+    if (nDevices == 0)
+    {
+        Serial.println("No I2C devices found\n");
+    }
+    else
+    {
+        Serial.println("Done.\n");
+    }
+}
+
 void loop()
 {
+    checkI2CBus();
+
     readValues();
     displayValues();
     publishValues();
