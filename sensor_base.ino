@@ -222,7 +222,12 @@ void displayValues()
 void publishValues()
 {
     if (!mqttClient.connected()){
-        return;
+        Serial.println("Lost connection to MQTT-Server .. try to reconnect");
+        setupMQTT();
+        if (!mqttClient.connected()){
+            Serial.println("Reconnect to MQTT-Server failed.");
+            return;
+        }
     }
 
     mqttClient.publish("esp32/state", "Running");
