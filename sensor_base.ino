@@ -28,6 +28,10 @@ float h;
 DHT dht(DHT_PIN, DHT_TYPE);
 
 // Light meter
+// !! MUST make bugfix in BH1750_LIB: Wire.Reset(); if NOT two bytes
+// are available yet, for read (e.g. while still starting the sensor)
+// => without this bugfix, reading the value might tear down I2C forever
+// which even blocks the OLED from updates (this uses I2C, too).
 #define BH1750_DEBUG;
 BH1750 lightMeter;
 uint16_t lux = 0;
