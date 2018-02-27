@@ -228,10 +228,7 @@ void publishValues()
             Serial.println("Reconnect to MQTT-Server failed.");
             return;
         }
-    }
-
-    mqttClient.publish("esp32/state", "Running");
-    
+    }   
     if (!isnan(t_c))
     {
         mqttClient.publish("esp32/temperature", String(t_c).c_str());
@@ -240,7 +237,7 @@ void publishValues()
         mqttClient.publish("esp32/humidity", String(h).c_str());
     }
     
-    if (lux > 0 && lux < 10000){
+    if (lux < 10000){
         mqttClient.publish("esp32/lux", String(lux).c_str());
     }
    
